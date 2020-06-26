@@ -12,10 +12,12 @@ class Links {
   Multiorder multiorder;
   Payment payment;
   Order order;
-  Links({this.hostedAccount,this.payment, this.self, this.order,this.multiorder,});
+  String file;
+  Links({this.hostedAccount,this.payment, this.self, this.order,this.multiorder,this.file});
 
   factory Links.fromJson(Map<String, dynamic> json) {
     return Links(
+      file: json['file'],
       payment:   json['payment'] != null ? Payment.fromJson(json['payment']) : null,
       multiorder: json['multiorder'] != null ? Multiorder.fromJson(json['multiorder']) : null,
       order: json['order'] != null ? Order.fromJson(json['order']) : null,
@@ -29,6 +31,7 @@ class Links {
     if (this.multiorder != null) {
       data['multiorder'] = this.multiorder.toJson();
     }
+    data['file'] = this.file;
     if (this.hostedAccount != null) {
       data['hostedAccount'] = this.hostedAccount.toJson();
     }

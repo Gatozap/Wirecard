@@ -13,6 +13,7 @@ class ContaPF {
   String channelId;
   String createdAt;
   Email email;
+
   String id;
   String login;
   Person person;
@@ -114,56 +115,10 @@ class ContaPF {
     return data;
   }
 }
-class ContaPFRegistrado {
-    Links links;
-    String accessToken;
-    String channelId;
-    String createdAt;
-    Email email;
-    String id;
-    String login;
-    Person person;
-    bool transparentAccount;
-    String type;
 
-    ContaPFRegistrado({this.links, this.accessToken, this.channelId, this.createdAt, this.email, this.id, this.login, this.person, this.transparentAccount, this.type});
 
-    factory ContaPFRegistrado.fromJson(Map<String, dynamic> json) {
-        return ContaPFRegistrado(
-          links: json['links'] != null ? Links.fromJson(json['links']) : null,
-            accessToken: json['accessToken'],
-            channelId: json['channelId'],
-            createdAt: json['createdAt'],
-            email: json['email'] != null ? Email.fromJson(json['email']) : null,
-            id: json['id'],
-            login: json['login'],
-            person: json['person'] != null ? Person.fromJson(json['person']) : null,
-            transparentAccount: json['transparentAccount'],
-            type: json['type'],
-        );
-    }
 
-    Map<String, dynamic> toJson() {
-        final Map<String, dynamic> data = new Map<String, dynamic>();
-        data['accessToken'] = this.accessToken;
-        data['channelId'] = this.channelId;
-        data['createdAt'] = this.createdAt;
-        data['id'] = this.id;
-        data['login'] = this.login;
-        data['transparentAccount'] = this.transparentAccount;
-        data['type'] = this.type;
-        if (this.links != null) {
-            data['links'] = this.links.toJson();
-        }
-        if (this.email != null) {
-            data['email'] = this.email.toJson();
-        }
-        if (this.person != null) {
-            data['person'] = this.person.toJson();
-        }
-        return data;
-    }
-}
+
 
 
 

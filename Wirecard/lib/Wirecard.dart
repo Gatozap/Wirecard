@@ -2,29 +2,33 @@ library Wirecard;
 
 import 'dart:convert';
 
-import 'package:Wirecard/Cliente/CartaoDeCredito/CartaoDeCredito.dart';
+import 'package:Wirecard/Antecipacao/Antecipacao.dart';
+import 'package:Wirecard/ContaBancaria/ContaBancaria.dart';
 import 'package:Wirecard/Conts.dart';
 import 'package:Wirecard/MultiPagamentos/MultiPagamentos.dart';
+
 import 'package:Wirecard/Notificacao/Notificacao.dart';
 import 'package:Wirecard/Objetos/CreditCard.dart';
-import 'package:Wirecard/Pagamento/Liberacao/Liberacao.dart';
+import 'package:Wirecard/Objetos/MultiPedido.dart';
+import 'package:Wirecard/Objetos/MultiPedido.dart';
+
+import 'package:Wirecard/Objetos/Webhook.dart';
 
 import 'package:Wirecard/Pedido/Pedido.dart';
 
-
-
-
-
-
 import 'package:Wirecard/Revendedor/Revendedor.dart';
+import 'package:Wirecard/Transferencia/Transferencia.dart';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:common_utils/common_utils.dart';
 import 'App.dart';
 import 'Cliente/Cliente.dart';
 import 'ContaWirecard/ContaPF.dart';
-import 'Pagamento/Pagamento.dart';
 
+import 'Objetos/MultiPedido.dart';
+import 'Objetos/MultiPedido.dart';
+import 'Objetos/MultiPedido.dart';
+import 'Pagamento/Pagamento.dart';
 
 /// A Calculator.
 class Wirecard {
@@ -48,19 +52,14 @@ class Wirecard {
       'Authorization': 'Basic ${getToken()}',
       "Cache-Control": "no-cache",
     };
-
-
-
-
-
   }
 
   Initialize(app) async {
     http.Response result = (await RegistrarApp(app));
     app = App.fromJson(json.decode(result.body.toString()));
     return app;
-
   }
+
   RegistrarRevendedor(Revendedor revendedor) {
     return http
         .post('${e.apiUrl}/v2/accounts#', body: revendedor.toMap())
@@ -82,6 +81,20 @@ class Wirecard {
       return value;
     }).catchError((onError) {
       print('erro ao verificar Conta Wire: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> PermissoesAcessosUsuario() async {
+    return http
+        .get(
+      'https://connect-sandbox.wirecard.com.br/oauth/authorize?response_type=code&client_id=APP-QQ1NUNIKRQ9B&redirect_uri=https://wirecard.com.br/&scope=RECEIVE_FUNDS,TRANSFER_FUNDS',
+      headers: headers,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro ao Pedir permissao do usuario: ${onError.toString()} ');
     });
   }
 
@@ -113,7 +126,586 @@ class Wirecard {
     });
   }
 
+  Future<dynamic> ConsultarTodasContaBancaria(String account_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/accounts/$account_id/bankaccounts',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print(
+          'erro ao consultar Lista de conta bancaria: ${onError.toString()} ');
+    });
+  }
 
+  Future<dynamic> ConsultarContaBancaria(String bank_account_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/bankaccounts/$bank_account_id',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro ao consultar conta bancaria: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> ConsultarTransferencia(String transfer_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/transfers/$transfer_id',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro Consultar Transferencias: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> ConsultarTodasAsTransferencia() async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/transfers',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro ao listar Todas as Transferencias: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> ObterArquivoFinanceiro(String date) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/reconciliations/financials?eventsCreatedAt=$date',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro ao Obter Arquivos de venda: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> ObterArquivoDeVendas(String date) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      'https://api.moip.com.br/v2/reconciliations/sales/$date',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro ao Obter Arquivos de venda: ${onError.toString()} ');
+    });
+  }
+
+
+  Future<dynamic> ListarReembolsoPedido(String orders_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/orders/$orders_id/refunds',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro Listar Reembolso: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> ListarReembolsoPagamento(String payment_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/payments/$payment_id/refunds',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro Listar Reembolso: ${onError.toString()} ');
+    });
+  }
+
+
+  Future<dynamic> ConsultarReembolso(String refund_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/refunds/$refund_id',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro ao listar webhooks: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> ConsultarAntecipacao(String anticipation_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/anticipations/$anticipation_id',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro Consultar as Astencipacoes: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> ConsultarTodasAsAntecipacoes() async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/anticipations',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro Todas as Astencipacoes: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> ConsultarTodosWebHook() async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/webhooks',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro ao listar webhooks: ${onError.toString()} ');
+    });
+  }
+
+
+  Future<dynamic> ReembolsarPedido(String order_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/orders/$order_id/refunds',
+
+        headers: headers2,
+        encoding: utf8)
+        .then((response) {
+      print('aqui result Conta Bancaria ${response.body.toString()}');
+
+      return response;
+    }).catchError((err) {
+      print('Erro ao result Conta Bancaria ${err.toString()}');
+    });
+  }
+
+  Future<dynamic> SolicitacaoAntecipcao(int valor) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/anticipations?amount=$valor',
+
+        headers: headers2,
+        encoding: utf8)
+        .then((response) {
+      print('aqui result Solicitacao Antecipada ${response.body.toString()}');
+
+      return response;
+    }).catchError((err) {
+      print('Erro ao result Conta Bancaria ${err.toString()}');
+    });
+  }
+
+  Future<dynamic> Estimativa(int valor) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/anticipationestimates?amount=$valor',
+
+        headers: headers2,
+        encoding: utf8)
+        .then((response) {
+      print('aqui result Conta Bancaria ${response.body.toString()}');
+
+      return response;
+    }).catchError((err) {
+      print('Erro ao result Conta Bancaria ${err.toString()}');
+    });
+  }
+
+  Future<dynamic> Reembolsar(String payment_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/payments/$payment_id/refunds',
+
+        headers: headers2,
+        encoding: utf8)
+        .then((response) {
+      print('aqui result Conta Bancaria ${response.body.toString()}');
+
+      return response;
+    }).catchError((err) {
+      print('Erro ao result Conta Bancaria ${err.toString()}');
+    });
+  }
+
+
+  Future<dynamic> CriarContaBancaria(
+      ContaBancaria contaBancaria, String account_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/accounts/$account_id/bankaccounts',
+            body: jsonEncode(contaBancaria.toJson()),
+            headers: headers2,
+            encoding: utf8)
+        .then((response) {
+      print('aqui result Conta Bancaria ${response.body.toString()}');
+
+      return response;
+    }).catchError((err) {
+      print('Erro ao result Conta Bancaria ${err.toString()}');
+    });
+  }
+
+  Future<dynamic> ReverterTransferencia( String transfer_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/transfers/$transfer_id/reverse',
+
+        headers: headers2,
+        encoding: utf8)
+        .then((response) {
+      return response;
+    }).catchError((err) {
+      print('Erro ao result Reverter Transferencia ${err.toString()}');
+    });
+  }
+
+  Future<dynamic> CriarTransferencia(Transferencia transferencia) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/transfers',
+        body: jsonEncode(transferencia.toJson()),
+        headers: headers2,
+        encoding: utf8)
+        .then((response) {
+
+
+      return response;
+    }).catchError((err) {
+      print('Erro ao result Transferencia ${err.toString()}');
+    });
+  }
+
+
+  Future<dynamic> ReenviarWebhook(Webhook webhook) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/webhooks',
+            body: jsonEncode(webhook.toJson()),
+            headers: headers2,
+            encoding: utf8)
+        .then((response) {
+      print('aqui result Web Hook ${response.body.toString()}');
+
+      return response;
+    }).catchError((err) {
+      print('Erro ao result Webhooks ${err.toString()}');
+    });
+  }
+
+
+  Future<dynamic> ConsultarLancamento(String entry_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/entries/$entry_id',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro ao Consultar Todos os Lançamentos: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> ConsultarTodosOsLancamentos() async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/entries',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro ao Consultar Todos os Lançamentos: ${onError.toString()} ');
+    });
+  }
+
+
+
+  Future<dynamic> ConsultarDetalhesExtratoFuturo() async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/futurestatements/details?type=1&date=2018-12-18',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro ao verificar Conta Wire: ${onError.toString()} ');
+    });
+  }
+
+
+  Future<dynamic> ConsultarExtratoFuturo() async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/futurestatements?end=2019-01-15&begin=2019-01-01',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro ao verificar Conta Wire: ${onError.toString()} ');
+    });
+  }
+
+
+  Future<dynamic> ConsultarTodasContasBancarias(String account_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/accounts/$account_id/bankaccounts',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro ao verificar Conta Wire: ${onError.toString()} ');
+    });
+  }
+
+  ///v2/statements/details?type=type&date=date
+  Future<dynamic> DetalheExtrato() async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/statements/details?type=1&date=2018-10-04',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro Detalhe Extrato: ${onError.toString()} ');
+    });
+  }
+
+  ///END = DATA, BEGIN = DATA
+  Future<dynamic> ListarExtrato() async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/statements?end=2019-01-15&begin=2019-01-01',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro Lista Extrato: ${onError.toString()} ');
+    });
+  }
+
+
+  Future<dynamic> ConsultarSaldoWireCard() async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/balances',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro Saldo Wirecard: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> ConsultarWebhook(String payment_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      '${e.apiUrl}v2/webhooks?resourceId=$payment_id',
+      headers: headers2,
+    )
+        .then((value) {
+      print('aqui value $value');
+      return value;
+    }).catchError((onError) {
+      print('erro ao verificar Conta Wire: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> DeletarContaBancaria(String bankaccount_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .delete(
+      '${e.apiUrl}v2/bankaccounts/$bankaccount_id',
+      headers: headers2,
+    )
+        .then((response) {
+      print('aqui result Deletou a Conta Bancaria ${response.body.toString()}');
+
+      return response;
+    }).catchError((err) {
+      print('Erro ao Deletar Preferencia ${err.toString()}');
+    });
+  }
+
+  Future<dynamic> DeletarPreferenciaNotificacao(String notification_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .delete(
+      '${e.apiUrl}v2/preferences/notifications/$notification_id',
+      headers: headers2,
+    )
+        .then((response) {
+      print('aqui result Deletou a Preferencia ${response.body.toString()}');
+
+      return response;
+    }).catchError((err) {
+      print('Erro ao Deletar Preferencia ${err.toString()}');
+    });
+  }
 
   Future<dynamic> DeletarCartao(String deletarCartao) async {
     var headers2 = {
@@ -121,21 +713,36 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .delete('${e.apiUrl}v2/fundinginstruments/$deletarCartao',
-
-        headers: headers2,
-        )
+        .delete(
+      '${e.apiUrl}v2/fundinginstruments/$deletarCartao',
+      headers: headers2,
+    )
         .then((response) {
-
-
       print('aqui result Deletou o cartão ${response.body.toString()}');
-
 
       return response;
     }).catchError((err) {
       print('Erro ao criar cliente ${err.toString()}');
     });
   }
+
+  Future<dynamic> CapturarMultiPagamentos(String multiPagamentos) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/multipayments/$multiPagamentos/capture',
+            headers: headers2, encoding: utf8)
+        .then((response) {
+      print('aqui result cliente ${response.body.toString()}');
+
+      return response;
+    }).catchError((err) {
+      print('Erro ao criar cliente ${err.toString()}');
+    });
+  }
+
   /// SUBSTITUIR  CUS-7SAAIJLS6K8O POR ACOUNT_ID
   Future<dynamic> CriarCartaoDeCredito(CreditCard creditCard) async {
     var headers2 = {
@@ -143,15 +750,12 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/customers/CUS-7SAAIJLS6K8O/fundinginstruments',
-        body: jsonEncode(creditCard.toJson()),
-        headers: headers2,
-        encoding: utf8)
+        .post('${e.apiUrl}v2/customers/CUS-6HLAPWBRG0SO/fundinginstruments',
+            body: jsonEncode(creditCard.toJson()),
+            headers: headers2,
+            encoding: utf8)
         .then((response) {
-
-          
-       print('aqui result cliente ${response.body.toString()}');
-     
+      print('aqui result cliente ${response.body.toString()}');
 
       return response;
     }).catchError((err) {
@@ -159,26 +763,88 @@ class Wirecard {
     });
   }
 
-
-  Future<dynamic> CancelarPagamentoPreAutorizado(Liberacao liberacao) async {
+  Future<dynamic> CancelarMultiPagamentoPreAutorizado(
+      String multipayment_id) async {
     var headers2 = {
       'Content-Type': 'application/json',
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/escrows/ECW-9OS6FAPR3FD5/release',
-        body: jsonEncode(liberacao.toJson()),
-        headers: headers2,
-        encoding: utf8)
+        .post('${e.apiUrl}v2/payments/$multipayment_id/void',
+            headers: headers2, encoding: utf8)
         .then((response) {
+      print('aqui result Cancelar Multi Pagamento ${response.body.toString()}');
 
+      return response;
+    }).catchError((err) {
+      print('Erro ao Cancelar Multi Pagamento ${err.toString()}');
+    });
+  }
 
+  Future<dynamic> CancelarPagamentoPreAutorizado() async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/payments/PAY-OK0AQYTLTLYL/void',
+            headers: headers2, encoding: utf8)
+        .then((response) {
       print('aqui result Liberacao ${response.body.toString()}');
-
 
       return response;
     }).catchError((err) {
       print('Erro ao Liberar Custodia ${err.toString()}');
+    });
+  }
+
+  Future<dynamic> AtualizarContaBancaria(
+      ContaBancaria contaBancaria, String bankaccount_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .put('${e.apiUrl}v2/bankaccounts/$bankaccount_id',
+            body: jsonEncode(contaBancaria.toJson()),
+            headers: headers2,
+            encoding: utf8)
+        .then((response) {
+      print('aqui result Atualizar Conta Bancaria ${response.body.toString()}');
+      return response;
+    }).catchError((err) {
+      print('Erro ao Multi Pedid ${err.toString()}');
+    });
+  }
+
+  Future<dynamic> MultiPedido() async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/multiorders', headers: headers2, encoding: utf8)
+        .then((response) {
+      print('aqui result Multi Pedido ${response.body.toString()}');
+      return response;
+    }).catchError((err) {
+      print('Erro ao Multi Pedid ${err.toString()}');
+    });
+  }
+
+  Future<dynamic> LiberarCustodiaMultiPagamento(String escrow_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/escrows/$escrow_id/release',
+            headers: headers2, encoding: utf8)
+        .then((response) {
+      print('aqui result Liberacao multiPagamento ${response.body.toString()}');
+      return response;
+    }).catchError((err) {
+      print('Erro ao Liberar multiPagamento ${err.toString()}');
     });
   }
 
@@ -189,15 +855,9 @@ class Wirecard {
     };
     return http
         .post('${e.apiUrl}v2/escrows/$escrow_id/release',
-
-        headers: headers2,
-        encoding: utf8)
+            headers: headers2, encoding: utf8)
         .then((response) {
-
-
       print('aqui result Liberacao ${response.body.toString()}');
-
-
       return response;
     }).catchError((err) {
       print('Erro ao Liberar Custodia ${err.toString()}');
@@ -211,9 +871,9 @@ class Wirecard {
     };
     return http
         .post('${e.apiUrl}v2/customers',
-        body: jsonEncode(cliente.toJson()),
-        headers: headers2,
-        encoding: utf8)
+            body: jsonEncode(cliente.toJson()),
+            headers: headers2,
+            encoding: utf8)
         .then((response) {
       print('aqui result cliente ${response.body.toString()}');
       print('aqui header ${headers2}');
@@ -224,16 +884,14 @@ class Wirecard {
     });
   }
 
-  Future<dynamic> CapturarPagamentoPreAutorizado(String payment_id) async {
+  Future<dynamic> CapturarPagamentoPreAutorizado() async {
     var headers2 = {
       'Content-Type': 'application/json',
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/payments/$payment_id/capture',
-
-        headers: headers2,
-        encoding: utf8)
+        .post('${e.apiUrl}v2/payments/PAY-OK0AQYTLTLYL/capture',
+            headers: headers2, encoding: utf8)
         .then((response) {
       print('aqui Captura Pagamento ${response.body.toString()}');
       print('aqui header ${headers2}');
@@ -243,14 +901,16 @@ class Wirecard {
       print('Erro ao capturar Pagamento ${err.toString()}');
     });
   }
+
   Future<dynamic> SimuladorPagamentos(String codigo, String valor) async {
     var headers2 = {
       'Content-Type': 'application/json',
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get('https://sandbox.moip.com.br/simulador/authorize?payment_id=$codigo&amount=$valor',headers: headers2
-    )
+        .get(
+            'https://sandbox.moip.com.br/simulador/authorize?payment_id=$codigo&amount=$valor',
+            headers: headers2)
         .then((response) {
       print('aqui Key ${response.body.toString()}');
       print('aqui header ${headers2}');
@@ -260,7 +920,6 @@ class Wirecard {
       print('Erro ao criar conta ${err.toString()}');
     });
   }
-
 
   Future<dynamic> VerificarKeys() async {
     var headers2 = {
@@ -268,8 +927,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get('https://sandbox.moip.com.br/v2/keys',headers: headers2
-    )
+        .get('https://sandbox.moip.com.br/v2/keys', headers: headers2)
         .then((response) {
       print('aqui Key ${response.body.toString()}');
       print('aqui header ${headers2}');
@@ -280,6 +938,21 @@ class Wirecard {
     });
   }
 
+  Future<dynamic> VerificarMultiPedidos(String multiorder_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get('${e.apiUrl}v2/multiorders/$multiorder_id', headers: headers2)
+        .then((response) {
+      print('aqui header ${headers2}');
+
+      return response;
+    }).catchError((err) {
+      print('Erro ao verificar multiPagamentos ${err.toString()}');
+    });
+  }
 
   Future<dynamic> VerificarTodosCliente() async {
     var headers2 = {
@@ -287,8 +960,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get('${e.apiUrl}v2/customers/',headers: headers2
-    )
+        .get('${e.apiUrl}v2/customers/', headers: headers2)
         .then((response) {
       print('aqui verificou Todos Cliente ${response.body.toString()}');
       print('aqui header ${headers2}');
@@ -305,8 +977,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get('${e.apiUrl}v2/multipayments/$multipayment_id',headers: headers2
-    )
+        .get('${e.apiUrl}v2/multipayments/$multipayment_id', headers: headers2)
         .then((response) {
       print('aqui verificou MultiPagamentos ${response.body.toString()}');
       print('aqui header ${headers2}');
@@ -317,15 +988,13 @@ class Wirecard {
     });
   }
 
-
   Future<dynamic> VerificarCliente(String cliente) async {
     var headers2 = {
       'Content-Type': 'application/json',
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get('${e.apiUrl}v2/customers/$cliente',headers: headers2
-       )
+        .get('${e.apiUrl}v2/customers/$cliente', headers: headers2)
         .then((response) {
       print('aqui verificou Cliente ${response.body.toString()}');
       print('aqui header ${headers2}');
@@ -336,19 +1005,76 @@ class Wirecard {
     });
   }
 
+  Future<dynamic> CriarNotificacaoApp(Notificacao notificacao) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/preferences/APP-3984HG73HE9/notifications',
+            body: jsonEncode(notificacao.toJson()),
+            headers: headers2,
+            encoding: utf8)
+        .then((response) {
+      print('aqui header ${headers2}');
+      print('aqui responde ${response.body.toString()}');
+      return response;
+    }).catchError((err) {
+      print('Erro ao criar pagamento ${err.toString()}');
+    });
+  }
 
-  Future<dynamic> CriarNotificacao(Notificacao notificacao ) async {
+  Future<dynamic> ListarTodasAsPreferencia() async {
+    return http
+        .get(
+      '${e.apiUrl}v2/preferences/notifications',
+      headers: headers,
+    )
+        .then((value) {
+      return value;
+    }).catchError((onError) {
+      print('erro ao verificar Preferencia Lista: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> ConsultarMultiPagamentos(String multipayment_id) async {
+    return http
+        .get(
+      '${e.apiUrl}v2/multipayments/$multipayment_id',
+      headers: headers,
+    )
+        .then((value) {
+      return value;
+    }).catchError((onError) {
+      print('erro ao verificar Multi Pagamento: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> ConsultarPreferenciaNotificacao(
+      String notification_id) async {
+    return http
+        .get(
+      '${e.apiUrl}v2/preferences/notifications/$notification_id',
+      headers: headers,
+    )
+        .then((value) {
+      return value;
+    }).catchError((onError) {
+      print('erro ao verificar Pagamento: ${onError.toString()} ');
+    });
+  }
+
+  Future<dynamic> CriarNotificacaoContaWire(Notificacao notificacao) async {
     var headers2 = {
       'Content-Type': 'application/json',
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
         .post('${e.apiUrl}v2/preferences/notifications',
-        body: jsonEncode(notificacao.toJson()),
-        headers: headers2,
-        encoding: utf8)
+            body: jsonEncode(notificacao.toJson()),
+            headers: headers2,
+            encoding: utf8)
         .then((response) {
-
       print('aqui header ${headers2}');
       print('aqui responde ${response.body.toString()}');
       return response;
@@ -357,19 +1083,17 @@ class Wirecard {
     });
   }
 
-
-  Future<dynamic> CriarMultiPagamento(MultiPagementos multiPagementos) async {
+  Future<dynamic> CriarMultiPedidos(MultiPedidos multiPedido) async {
     var headers2 = {
       'Content-Type': 'application/json',
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/multiorders/multiorder_id/multipayments',
-        body: jsonEncode(multiPagementos.toJson()),
-        headers: headers2,
-        encoding: utf8)
+        .post('${e.apiUrl}v2/multiorders',
+            body: jsonEncode(multiPedido.toJson()),
+            headers: headers2,
+            encoding: utf8)
         .then((response) {
-
       print('aqui header ${headers2}');
       print('aqui responde ${response.body.toString()}');
       return response;
@@ -378,6 +1102,25 @@ class Wirecard {
     });
   }
 
+  Future<dynamic> CriarMultiPagamento(
+      MultiPagamentos multiPagementos, String multiorder_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/multiorders/$multiorder_id/multipayments',
+            body: jsonEncode(multiPagementos.toJson()),
+            headers: headers2,
+            encoding: utf8)
+        .then((response) {
+      print('aqui header ${headers2}');
+      print('aqui responde ${response.body.toString()}');
+      return response;
+    }).catchError((err) {
+      print('Erro ao criar pagamento ${err.toString()}');
+    });
+  }
 
   Future<dynamic> CriarPagamento(Pagamento pagamento, String order_id) async {
     var headers2 = {
@@ -386,11 +1129,10 @@ class Wirecard {
     };
     return http
         .post('${e.apiUrl}v2/orders/$order_id/payments',
-        body: jsonEncode(pagamento.toJson()),
-        headers: headers2,
-        encoding: utf8)
+            body: jsonEncode(pagamento.toJson()),
+            headers: headers2,
+            encoding: utf8)
         .then((response) {
-
       print('aqui header ${headers2}');
 
       return response;
@@ -406,11 +1148,10 @@ class Wirecard {
     };
     return http
         .post('${e.apiUrl}v2/orders',
-        body: jsonEncode(pedido.toJson()),
-        headers: headers2,
-        encoding: utf8)
+            body: jsonEncode(pedido.toJson()),
+            headers: headers2,
+            encoding: utf8)
         .then((response) {
-     
       print('aqui header ${headers2}');
 
       return response;
@@ -419,6 +1160,26 @@ class Wirecard {
     });
   }
 
+  Future<dynamic> CriarContaWireTransparente(ContaPF contapf) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post('${e.apiUrl}v2/accounts',
+            body: jsonEncode(contapf.toJson()),
+            headers: headers2,
+            encoding: utf8)
+        .then((response) {
+      print(
+          'aqui result cadastrar conta transparente ${response.body.toString()}');
+      print('aqui header ${headers2}');
+
+      return response;
+    }).catchError((err) {
+      print('Erro ao criar conta ${err.toString()}');
+    });
+  }
 
   Future<dynamic> CriarContaPF(ContaPF contapf) async {
     var headers2 = {
@@ -441,10 +1202,14 @@ class Wirecard {
   }
 
   Future<dynamic> VerificarPagamento(String pagamento_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
     return http
         .get(
       '${e.apiUrl}v2/payments/$pagamento_id',
-      headers: headers,
+      headers: headers2,
     )
         .then((value) {
       return value;
@@ -453,12 +1218,15 @@ class Wirecard {
     });
   }
 
-
   Future<dynamic> VerificarPedido(String order_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
     return http
         .get(
       '${e.apiUrl}v2/orders/$order_id',
-      headers: headers,
+      headers: headers2,
     )
         .then((value) {
       return value;
@@ -468,10 +1236,14 @@ class Wirecard {
   }
 
   Future<dynamic> VerificarTodosPedido() async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
     return http
         .get(
       '${e.apiUrl}v2/orders',
-      headers: headers,
+      headers: headers2,
     )
         .then((value) {
       return value;
@@ -481,10 +1253,14 @@ class Wirecard {
   }
 
   Future<dynamic> VerificarContaWirecard(String email) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
     return http
         .get(
       '${e.apiUrl}v2/accounts/exists?email=$email',
-      headers: headers,
+      headers: headers2,
     )
         .then((value) {
       return value;
@@ -499,6 +1275,17 @@ class Wirecard {
     String token = stringToBase64.encode(credentials);
     print('TOKEN ${token}');
     return token;
+  }
+
+  Future AtualizarToken() {
+    return http
+        .get(
+      'https://connect-sandbox.moip.com.br/oauth/token?grant_type=refresh_token&refresh_token=7365111111e3417d88837457c9f940_v2',
+      headers: headers,
+    )
+        .then((value) {
+      return value;
+    });
   }
 
   Future getAcessToken() {

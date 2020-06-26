@@ -5,7 +5,7 @@ import 'package:Wirecard/Objetos/Links.dart';
 import 'package:Wirecard/Objetos/Payment.dart';
 import 'package:Wirecard/Pedido/Amount.dart';
 
-class MultiPagementos {
+class MultiPagamentos {
   Links links;
   Amount amount;
   String id;
@@ -17,7 +17,7 @@ class MultiPagementos {
     int installmentCount;
       String multiorder_id;
       String multipayment_id;
-    MultiPagementos({
+  MultiPagamentos({
        this.links,
        this.amount,
        this.id,
@@ -27,10 +27,10 @@ class MultiPagementos {
        this.multipayment_id,
       this.fundingInstrument, this.installmentCount});
 
-    factory MultiPagementos.fromJson(Map<String, dynamic> json) {
-        return MultiPagementos(
+    factory MultiPagamentos.fromJson(Map<String, dynamic> json) {
+        return MultiPagamentos(
              links:    json['links'] != null ? Links.fromJson(json['links']) : null,
-             amount:   json['amount'],
+             amount:   json['amount'] != null ? Amount.fromJson(json['Amount']): null,
              id:       json['id'],
           payments: json['payments'] != null ? (json['payments'] as List).map((i) => Payment.fromJson(i)).toList() : null,
           status:   json['status'],
