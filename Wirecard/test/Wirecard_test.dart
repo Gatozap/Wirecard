@@ -668,12 +668,12 @@ void main() {
     });*/
 
 
-    test('Consultar Antecipações: ', () async {
+    /*test('Consultar Antecipações: ', () async {
 
       Response result = await w.ConsultarAntecipacao('ANT-5DB57BGL9FGT');
       print('Consultar Antecipações ${result.statusCode}');
       print('Consultar Antecipações ${result.body.toString()}');
-    });
+    }); */
 
     //TODO CAPTURAR PAGAMENTO PRE AUTORIZADO
     /*test('Capturar Pagamento pre autorizado: ', () async {
