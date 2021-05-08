@@ -2,8 +2,9 @@ library Wirecard;
 
 import 'dart:convert';
 
-import 'package:Wirecard/Antecipacao/Antecipacao.dart';
+
 import 'package:Wirecard/ContaBancaria/ContaBancaria.dart';
+import 'package:Wirecard/ContaWirecard/ContaPJ.dart';
 import 'package:Wirecard/Conts.dart';
 import 'package:Wirecard/MultiPagamentos/MultiPagamentos.dart';
 
@@ -18,9 +19,10 @@ import 'package:Wirecard/Pedido/Pedido.dart';
 
 import 'package:Wirecard/Revendedor/Revendedor.dart';
 import 'package:Wirecard/Transferencia/Transferencia.dart';
-import 'package:dio/dio.dart';
+
 import 'package:http/http.dart' as http;
-import 'package:common_utils/common_utils.dart';
+
+
 import 'App.dart';
 import 'Cliente/Cliente.dart';
 import 'ContaWirecard/ContaPF.dart';
@@ -62,7 +64,7 @@ class Wirecard {
   /// Classical Account On-boarding    ---------------------------------------------------------------
   Future<dynamic> RegistrarApp(App app) async {
     return http
-        .post('${e.apiUrl}v2/channels',
+        .post(Uri.parse('${e.apiUrl}v2/channels'),
         body: jsonEncode(app.toJson()), headers: headers)
         .then((value) {
       print('aqui result registrar $value');
@@ -72,6 +74,23 @@ class Wirecard {
     });
   }
 
+  Future<dynamic> VerificarContaWirecardExistente(String account_id) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .get(
+      Uri.parse('${e.apiUrl}v2/accounts/$account_id'),
+      headers: headers2,
+    )
+        .then((value) {
+      return value;
+    }).catchError((onError) {
+      print('erro ao criar revendedor: ${onError.toString()} ');
+    });
+  }
+  
   Future<dynamic> VerificarContaWirecard(String email) async {
     var headers2 = {
       'Content-Type': 'application/json',
@@ -79,7 +98,7 @@ class Wirecard {
     };
     return http
         .get(
-      '${e.apiUrl}v2/accounts/exists?email=$email',
+      Uri.parse('${e.apiUrl}v2/accounts/exists?email=$email'),
       headers: headers2,
     )
         .then((value) {
@@ -89,13 +108,33 @@ class Wirecard {
     });
   }
 
+  Future<dynamic> CriarContaPJ(ContaPJ contapj) async {
+    var headers2 = {
+      'Content-Type': 'application/json',
+      'Authorization': 'OAuth ${app.accessToken}'
+    };
+    return http
+        .post(Uri.parse('${e.apiUrl}v2/accounts#'),
+        body: jsonEncode(contapj.toJson()),
+        headers: headers2,
+        encoding: utf8)
+        .then((response) {
+      print('aqui result cadastrar ${response.body.toString()}');
+      print('aqui header ${headers2}');
+
+      return response;
+    }).catchError((err) {
+      print('Erro ao criar conta ${err.toString()}');
+    });
+  }
+
   Future<dynamic> CriarContaPF(ContaPF contapf) async {
     var headers2 = {
       'Content-Type': 'application/json',
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/accounts#',
+        .post(Uri.parse('${e.apiUrl}v2/accounts#'),
         body: jsonEncode(contapf.toJson()),
         headers: headers2,
         encoding: utf8)
@@ -111,8 +150,8 @@ class Wirecard {
 
   Future<dynamic> PermissoesAcessosUsuario() async {
     return http
-        .get(
-      'https://connect-sandbox.wirecard.com.br/oauth/authorize?response_type=code&client_id=APP-QQ1NUNIKRQ9B&redirect_uri=https://wirecard.com.br/&scope=RECEIVE_FUNDS,TRANSFER_FUNDS',
+        .get(Uri.parse(
+      'https://connect-sandbox.wirecard.com.br/oauth/authorize?response_type=code&client_id=APP-QQ1NUNIKRQ9B&redirect_uri=https://wirecard.com.br/&scope=RECEIVE_FUNDS,TRANSFER_FUNDS'),
       headers: headers,
     )
         .then((value) {
@@ -134,7 +173,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/accounts',
+        .post(Uri.parse('${e.apiUrl}v2/accounts'),
         body: jsonEncode(contapf.toJson()),
         headers: headers2,
         encoding: utf8)
@@ -160,7 +199,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/customers',
+        .post(Uri.parse('${e.apiUrl}v2/customers'),
         body: jsonEncode(cliente.toJson()),
         headers: headers2,
         encoding: utf8)
@@ -181,7 +220,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/customers/CUS-6HLAPWBRG0SO/fundinginstruments',
+        .post(Uri.parse('${e.apiUrl}v2/customers/CUS-6HLAPWBRG0SO/fundinginstruments'),
         body: jsonEncode(creditCard.toJson()),
         headers: headers2,
         encoding: utf8)
@@ -201,7 +240,7 @@ class Wirecard {
     };
     return http
         .delete(
-      '${e.apiUrl}v2/fundinginstruments/$deletarCartao',
+      Uri.parse('${e.apiUrl}v2/fundinginstruments/$deletarCartao'),
       headers: headers2,
     )
         .then((response) {
@@ -219,7 +258,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get('${e.apiUrl}v2/customers/$cliente', headers: headers2)
+        .get(Uri.parse('${e.apiUrl}v2/customers/$cliente'), headers: headers2)
         .then((response) {
       print('aqui verificou Cliente ${response.body.toString()}');
       print('aqui header ${headers2}');
@@ -236,7 +275,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get('${e.apiUrl}v2/customers/', headers: headers2)
+        .get(Uri.parse('${e.apiUrl}v2/customers/'), headers: headers2)
         .then((response) {
       print('aqui verificou Todos Cliente ${response.body.toString()}');
       print('aqui header ${headers2}');
@@ -258,7 +297,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/orders',
+        .post(Uri.parse('${e.apiUrl}v2/orders'),
         body: jsonEncode(pedido.toJson()),
         headers: headers2,
         encoding: utf8)
@@ -276,8 +315,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/orders/$order_id',
+        .get(Uri.parse(
+     '${e.apiUrl}v2/orders/$order_id'),
       headers: headers2,
     )
         .then((value) {
@@ -293,8 +332,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/orders',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/orders'),
       headers: headers2,
     )
         .then((value) {
@@ -319,7 +358,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/orders/$order_id/payments',
+        .post(Uri.parse('${e.apiUrl}v2/orders/$order_id/payments'),
         body: jsonEncode(pagamento.toJson()),
         headers: headers2,
         encoding: utf8)
@@ -339,8 +378,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/payments/$pagamento_id',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/payments/$pagamento_id'),
       headers: headers2,
     )
         .then((value) {
@@ -356,7 +395,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/escrows/$escrow_id/release',
+        .post(Uri.parse('${e.apiUrl}v2/escrows/$escrow_id/release'),
         headers: headers2, encoding: utf8)
         .then((response) {
       print('aqui result Liberacao ${response.body.toString()}');
@@ -372,7 +411,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/payments/PAY-OK0AQYTLTLYL/capture',
+        .post(Uri.parse('${e.apiUrl}v2/payments/PAY-OK0AQYTLTLYL/capture'),
         headers: headers2, encoding: utf8)
         .then((response) {
       print('aqui Captura Pagamento ${response.body.toString()}');
@@ -390,7 +429,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/payments/PAY-OK0AQYTLTLYL/void',
+        .post(Uri.parse('${e.apiUrl}v2/payments/PAY-OK0AQYTLTLYL/void'),
         headers: headers2, encoding: utf8)
         .then((response) {
       print('aqui result Liberacao ${response.body.toString()}');
@@ -406,8 +445,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-        'https://sandbox.moip.com.br/simulador/authorize?payment_id=$codigo&amount=$valor',
+        .get(Uri.parse(
+        'https://sandbox.moip.com.br/simulador/authorize?payment_id=$codigo&amount=$valor'),
         headers: headers2)
         .then((response) {
       print('aqui Key ${response.body.toString()}');
@@ -432,7 +471,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/multiorders',
+        .post(Uri.parse('${e.apiUrl}v2/multiorders'),
         body: jsonEncode(multiPedido.toJson()),
         headers: headers2,
         encoding: utf8)
@@ -451,7 +490,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get('${e.apiUrl}v2/multiorders/$multiorder_id', headers: headers2)
+        .get(Uri.parse('${e.apiUrl}v2/multiorders/$multiorder_id'), headers: headers2)
         .then((response) {
       print('aqui header ${headers2}');
 
@@ -476,7 +515,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/multiorders/$multiorder_id/multipayments',
+        .post(Uri.parse('${e.apiUrl}v2/multiorders/$multiorder_id/multipayments'),
         body: jsonEncode(multiPagementos.toJson()),
         headers: headers2,
         encoding: utf8)
@@ -491,8 +530,8 @@ class Wirecard {
 
   Future<dynamic> ConsultarMultiPagamentos(String multipayment_id) async {
     return http
-        .get(
-      '${e.apiUrl}v2/multipayments/$multipayment_id',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/multipayments/$multipayment_id'),
       headers: headers,
     )
         .then((value) {
@@ -508,7 +547,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/multipayments/$multiPagamentos/capture',
+        .post(Uri.parse('${e.apiUrl}v2/multipayments/$multiPagamentos/capture'),
         headers: headers2, encoding: utf8)
         .then((response) {
       print('aqui result cliente ${response.body.toString()}');
@@ -528,7 +567,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/payments/$multipayment_id/void',
+        .post(Uri.parse('${e.apiUrl}v2/payments/$multipayment_id/void'),
         headers: headers2, encoding: utf8)
         .then((response) {
       print('aqui result Cancelar Multi Pagamento ${response.body.toString()}');
@@ -544,7 +583,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/escrows/$escrow_id/release',
+        .post(Uri.parse('${e.apiUrl}v2/escrows/$escrow_id/release'),
         headers: headers2, encoding: utf8)
         .then((response) {
       print('aqui result Liberacao multiPagamento ${response.body.toString()}');
@@ -569,7 +608,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/preferences/notifications',
+        .post(Uri.parse('${e.apiUrl}v2/preferences/notifications'),
         body: jsonEncode(notificacao.toJson()),
         headers: headers2,
         encoding: utf8)
@@ -587,7 +626,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/preferences/APP-3984HG73HE9/notifications',
+        .post(Uri.parse('${e.apiUrl}v2/preferences/APP-3984HG73HE9/notifications'),
         body: jsonEncode(notificacao.toJson()),
         headers: headers2,
         encoding: utf8)
@@ -603,8 +642,8 @@ class Wirecard {
   Future<dynamic> ConsultarPreferenciaNotificacao(
       String notification_id) async {
     return http
-        .get(
-      '${e.apiUrl}v2/preferences/notifications/$notification_id',
+        .get(Uri.parse(
+     '${e.apiUrl}v2/preferences/notifications/$notification_id'),
       headers: headers,
     )
         .then((value) {
@@ -615,8 +654,8 @@ class Wirecard {
   }
   Future<dynamic> ListarTodasAsPreferencia() async {
     return http
-        .get(
-      '${e.apiUrl}v2/preferences/notifications',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/preferences/notifications'),
       headers: headers,
     )
         .then((value) {
@@ -631,8 +670,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .delete(
-      '${e.apiUrl}v2/preferences/notifications/$notification_id',
+        .delete(Uri.parse(
+      '${e.apiUrl}v2/preferences/notifications/$notification_id'),
       headers: headers2,
     )
         .then((response) {
@@ -649,8 +688,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/webhooks?resourceId=$payment_id',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/webhooks?resourceId=$payment_id'),
       headers: headers2,
     )
         .then((value) {
@@ -666,8 +705,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/webhooks',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/webhooks'),
       headers: headers2,
     )
         .then((value) {
@@ -683,7 +722,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/webhooks',
+        .post(Uri.parse('${e.apiUrl}v2/webhooks'),
         body: jsonEncode(webhook.toJson()),
         headers: headers2,
         encoding: utf8)
@@ -707,8 +746,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/accounts/$account_id/bankaccounts',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/accounts/$account_id/bankaccounts'),
       headers: headers2,
     )
         .then((value) {
@@ -726,7 +765,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/accounts/$account_id/bankaccounts',
+        .post(Uri.parse('${e.apiUrl}v2/accounts/$account_id/bankaccounts'),
         body: jsonEncode(contaBancaria.toJson()),
         headers: headers2,
         encoding: utf8)
@@ -745,8 +784,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/bankaccounts/$bank_account_id',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/bankaccounts/$bank_account_id'),
       headers: headers2,
     )
         .then((value) {
@@ -762,8 +801,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/accounts/$account_id/bankaccounts',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/accounts/$account_id/bankaccounts'),
       headers: headers2,
     )
         .then((value) {
@@ -780,8 +819,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .delete(
-      '${e.apiUrl}v2/bankaccounts/$bankaccount_id',
+        .delete(Uri.parse(
+      '${e.apiUrl}v2/bankaccounts/$bankaccount_id'),
       headers: headers2,
     )
         .then((response) {
@@ -800,7 +839,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .put('${e.apiUrl}v2/bankaccounts/$bankaccount_id',
+        .put(Uri.parse('${e.apiUrl}v2/bankaccounts/$bankaccount_id'),
         body: jsonEncode(contaBancaria.toJson()),
         headers: headers2,
         encoding: utf8)
@@ -823,8 +862,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/balances',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/balances'),
       headers: headers2,
     )
         .then((value) {
@@ -838,8 +877,8 @@ class Wirecard {
   ///--------------------------------------------SALDO WIRECARD--------------------------------------------------
   Future<dynamic> SolicitarAcesso(String contapf) async {
     return http
-        .get(
-      '${e.apiUrl}v2/accounts/$contapf',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/accounts/$contapf'),
       headers: headers,
     )
         .then((value) {
@@ -861,8 +900,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/statements?end=2019-01-15&begin=2019-01-01',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/statements?end=2019-01-15&begin=2019-01-01'),
       headers: headers2,
     )
         .then((value) {
@@ -878,8 +917,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/statements/details?type=1&date=2018-10-04',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/statements/details?type=1&date=2018-10-04'),
       headers: headers2,
     )
         .then((value) {
@@ -895,8 +934,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/entries/$entry_id',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/entries/$entry_id'),
       headers: headers2,
     )
         .then((value) {
@@ -913,8 +952,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/entries',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/entries'),
       headers: headers2,
     )
         .then((value) {
@@ -933,8 +972,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/futurestatements/details?type=1&date=2018-12-18',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/futurestatements/details?type=1&date=2018-12-18'),
       headers: headers2,
     )
         .then((value) {
@@ -952,8 +991,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/futurestatements?end=2019-01-15&begin=2019-01-01',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/futurestatements?end=2019-01-15&begin=2019-01-01'),
       headers: headers2,
     )
         .then((value) {
@@ -977,8 +1016,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/transfers/$transfer_id',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/transfers/$transfer_id'),
       headers: headers2,
     )
         .then((value) {
@@ -995,8 +1034,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/transfers',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/transfers'),
       headers: headers2,
     )
         .then((value) {
@@ -1016,7 +1055,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/transfers/$transfer_id/reverse',
+        .post(Uri.parse('${e.apiUrl}v2/transfers/$transfer_id/reverse'),
 
         headers: headers2,
         encoding: utf8)
@@ -1033,7 +1072,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/transfers',
+        .post(Uri.parse('${e.apiUrl}v2/transfers'),
         body: jsonEncode(transferencia.toJson()),
         headers: headers2,
         encoding: utf8)
@@ -1057,8 +1096,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/orders/$orders_id/refunds',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/orders/$orders_id/refunds'),
       headers: headers2,
     )
         .then((value) {
@@ -1075,8 +1114,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/payments/$payment_id/refunds',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/payments/$payment_id/refunds'),
       headers: headers2,
     )
         .then((value) {
@@ -1094,8 +1133,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/refunds/$refund_id',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/refunds/$refund_id'),
       headers: headers2,
     )
         .then((value) {
@@ -1112,7 +1151,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/orders/$order_id/refunds',
+        .post(Uri.parse('${e.apiUrl}v2/orders/$order_id/refunds'),
 
         headers: headers2,
         encoding: utf8)
@@ -1131,7 +1170,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/payments/$payment_id/refunds',
+        .post(Uri.parse('${e.apiUrl}v2/payments/$payment_id/refunds'),
 
         headers: headers2,
         encoding: utf8)
@@ -1155,8 +1194,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/reconciliations/financials?eventsCreatedAt=$date',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/reconciliations/financials?eventsCreatedAt=$date'),
       headers: headers2,
     )
         .then((value) {
@@ -1173,8 +1212,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      'https://api.moip.com.br/v2/reconciliations/sales/$date',
+        .get(Uri.parse(
+      'https://api.moip.com.br/v2/reconciliations/sales/$date'),
       headers: headers2,
     )
         .then((value) {
@@ -1197,8 +1236,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/anticipations/$anticipation_id',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/anticipations/$anticipation_id'),
       headers: headers2,
     )
         .then((value) {
@@ -1215,8 +1254,8 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get(
-      '${e.apiUrl}v2/anticipations',
+        .get(Uri.parse(
+      '${e.apiUrl}v2/anticipations'),
       headers: headers2,
     )
         .then((value) {
@@ -1237,7 +1276,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/anticipations?amount=$valor',
+        .post(Uri.parse('${e.apiUrl}v2/anticipations?amount=$valor'),
 
         headers: headers2,
         encoding: utf8)
@@ -1256,7 +1295,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/anticipationestimates?amount=$valor',
+        .post(Uri.parse('${e.apiUrl}v2/anticipationestimates?amount=$valor'),
 
         headers: headers2,
         encoding: utf8)
@@ -1307,7 +1346,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .post('${e.apiUrl}v2/multiorders', headers: headers2, encoding: utf8)
+        .post(Uri.parse('${e.apiUrl}v2/multiorders'), headers: headers2, encoding: utf8)
         .then((response) {
       print('aqui result Multi Pedido ${response.body.toString()}');
       return response;
@@ -1331,7 +1370,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get('https://sandbox.moip.com.br/v2/keys', headers: headers2)
+        .get(Uri.parse('https://sandbox.moip.com.br/v2/keys'), headers: headers2)
         .then((response) {
       print('aqui Key ${response.body.toString()}');
       print('aqui header ${headers2}');
@@ -1352,7 +1391,7 @@ class Wirecard {
       'Authorization': 'OAuth ${app.accessToken}'
     };
     return http
-        .get('${e.apiUrl}v2/multipayments/$multipayment_id', headers: headers2)
+        .get(Uri.parse('${e.apiUrl}v2/multipayments/$multipayment_id'), headers: headers2)
         .then((response) {
       print('aqui verificou MultiPagamentos ${response.body.toString()}');
       print('aqui header ${headers2}');
@@ -1402,8 +1441,8 @@ class Wirecard {
 
   Future AtualizarToken() {
     return http
-        .get(
-      'https://connect-sandbox.moip.com.br/oauth/token?grant_type=refresh_token&refresh_token=7365111111e3417d88837457c9f940_v2',
+        .get(Uri.parse(
+      'https://connect-sandbox.moip.com.br/oauth/token?grant_type=refresh_token&refresh_token=7365111111e3417d88837457c9f940_v2'),
       headers: headers,
     )
         .then((value) {
@@ -1413,8 +1452,8 @@ class Wirecard {
 
   Future getAcessToken() {
     return http
-        .get(
-      'https://connect-sandbox.moip.com.br/oauth/token?client_id=APP-M11STAPPOAU&client_secret=UROQ0DJO7SDVS3GRUUTVBI6YO3GACTCE&grant_type=authorization_code&code=ZNEQAI4ZC00JAUESVB5FEODMR00PQ62LL3CDGXXQ&redirect_uri=http://urlteste.com.br',
+        .get(Uri.parse(
+      'https://connect-sandbox.moip.com.br/oauth/token?client_id=APP-M11STAPPOAU&client_secret=UROQ0DJO7SDVS3GRUUTVBI6YO3GACTCE&grant_type=authorization_code&code=ZNEQAI4ZC00JAUESVB5FEODMR00PQ62LL3CDGXXQ&redirect_uri=http://urlteste.com.br'),
       headers: headers,
     )
         .then((value) {

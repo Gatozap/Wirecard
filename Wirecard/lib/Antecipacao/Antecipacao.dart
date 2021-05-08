@@ -1,3 +1,5 @@
+
+
 import 'package:Wirecard/Objetos/Links.dart';
 
 class Antecipacao {

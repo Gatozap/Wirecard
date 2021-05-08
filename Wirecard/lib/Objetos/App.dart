@@ -14,7 +14,7 @@ class App {
     String website;
     App({this.description, this.name, this.redirectUri, this.site, this.accessToken, this.createdAt,  this.id,   this.secret, this.updatedAt, this.website});
 
-    factory App.fromJson(json) {
+    factory App.fromJson(Map<String, dynamic> json) {
         return App(
             description: json['description'],
             name: json['name'],

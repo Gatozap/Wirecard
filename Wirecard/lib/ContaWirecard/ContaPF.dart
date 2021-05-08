@@ -1,3 +1,4 @@
+
 import 'package:Wirecard/Objetos/Adress.dart';
 import 'package:Wirecard/Objetos/Email.dart';
 import 'package:Wirecard/Objetos/IdentityDocument.dart';
@@ -67,7 +68,7 @@ class ContaPF {
       scope: json['scope'],
        grant_type: json['grant_type'],
        code: json['code'],
-      links: json['_links'] != null ? Links.fromJson(json['_links']) : null,
+      links: json['links'] != null ? Links.fromJson(json['links']) : null,
       accessToken: json['accessToken'],
       channelId: json['channelId'],
       createdAt: json['createdAt'],

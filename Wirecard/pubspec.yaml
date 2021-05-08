@@ -8,8 +8,7 @@ environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
-  http: 0.12.1
-  dio: 3.0.9
+  http: 0.13.3
   common_utils: 1.2.1
   crypto: 2.1.5
   flutter:

@@ -2,16 +2,22 @@ import 'dart:convert';
 
 import 'package:Wirecard/Antecipacao/Antecipacao.dart';
 import 'package:Wirecard/App.dart';
+
 import 'package:Wirecard/Cliente/CartaoDeCredito/CartaoDeCredito.dart';
 
 import 'package:Wirecard/Cliente/Cliente.dart';
 import 'package:Wirecard/ContaBancaria/ContaBancaria.dart';
+import 'package:Wirecard/ContaWirecard/Compania.dart';
 import 'package:Wirecard/ContaWirecard/ContaPF.dart';
+import 'package:Wirecard/ContaWirecard/ContaPJ.dart';
+import 'package:Wirecard/ContaWirecard/TosAcceptance.dart';
 import 'package:Wirecard/Conts.dart';
 import 'package:Wirecard/MultiPagamentos/MultiPagamentos.dart';
 import 'package:Wirecard/Notificacao/Notificacao.dart';
 import 'package:Wirecard/Objetos/Adress.dart';
+
 import 'package:Wirecard/Objetos/BillingAddress.dart';
+import 'package:Wirecard/Objetos/BusinessSegment.dart';
 import 'package:Wirecard/Objetos/Card.dart';
 import 'package:Wirecard/Objetos/CreditCard.dart';
 import 'package:Wirecard/Objetos/Customer.dart';
@@ -40,6 +46,7 @@ import 'package:Wirecard/Objetos/SubTotals.dart';
 import 'package:Wirecard/Objetos/TaxDocument.dart';
 import 'package:Wirecard/Objetos/TransferInstrument.dart';
 import 'package:Wirecard/Objetos/Webhook.dart';
+import 'package:Wirecard/Objetos/mainActivity.dart';
 import 'package:Wirecard/Pagamento/Liberacao/Liberacao.dart';
 import 'package:Wirecard/Pagamento/Pagamento.dart';
 import 'package:Wirecard/Pedido/Amount.dart';
@@ -49,7 +56,7 @@ import 'package:Wirecard/Transferencia/Transferencia.dart';
 
 import 'package:Wirecard/Wirecard.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart';
+import 'package:http/http.dart' as http;
 
 Wirecard w = Wirecard(
   Environment.SANDBOX,
@@ -58,10 +65,13 @@ Wirecard w = Wirecard(
   appRegistrado,
 );
 
+
+
+
 App appRegistrado = App(
-    name: 'Teste RB',
-    redirectUri: 'https://www.ibout.com.br',
-    description: 'Teste App',
+    name: 'Teste BocaBoca',
+    redirectUri: 'https://www.bocaboca.com.br',
+    description: 'Teste App bb',
     accessToken: '7ad6a369b88543ab8fc2126106c7e725_v2',
     createdAt: '2020-06-17T17:25:10.096Z',
     id: 'APP-2FIJ82URD4B2',
@@ -137,6 +147,64 @@ ContaPF ccTrans = ContaPF(
     type: 'MERCHANT',
     transparentAccount: true);
 
+ContaPJ pj = new ContaPJ(
+  email: Email(address: 'mercado@mercado.com.br'),
+  type: 'MERCHANT',
+  businessSegment: BusinessSegment(id: '3'),
+  
+  person: Person(
+      name: 'Bota',
+      lastName: 'Dura',
+      address: Address(
+        zipCode: '10256-659',
+        streetNumber: '40',
+        street: 'Itai',
+        state: 'PR',
+        district: 'Federal',
+        city: 'Castro',
+        country: 'BRA',
+
+      ),
+      taxDocument: TaxDocument(type: 'CPF', number: '123.456.798-91'),
+      phone: Phone(
+        number: '965213244',
+        areaCode: '11',
+        countryCode: '55',
+      ),
+
+      birthDate: '2000-11-11',
+      identityDocument: IdentityDocument(
+
+          number: '215463897',
+          type: 'RG',
+          issueDate: '2000-12-12',
+          issuer: 'SSP')),
+  compania: Compania(
+    taxDocument: TaxDocument(type: 'CPF', number: '123.456.798-91'),
+    phone: Phone(
+      number: '965213244',
+      areaCode: '11',
+      countryCode: '55',
+    ),
+    razaoSocial: 'Prioto',
+    nome: 'Prioto Super',
+    mainactivity:
+        mainActivity(cnae: '82.91-1/00', description: 'Atividades de cobranças e informações cadastrais'),
+    address: Address(
+      zipCode: '10256-659',
+      streetNumber: '40',
+      street: 'Itai',
+      state: 'PR',
+      district: 'Federal',
+      city: 'Castro',
+      country: 'BRA',
+    ),
+  ),
+  
+
+    site: 'www.mercado.com.br',
+);
+
 ContaPF cc = new ContaPF(
     email: Email(address: 'Add@add.moip.com.br'),
     person: Person(
@@ -210,10 +278,10 @@ Webhook wb =
     Webhook(event: 'PAYMENT.AUTHORIZED', resourceId: 'ORD-5QXM27Y9UTZT');
 
 App app = new App(
-    description: 'Descrição da platforma',
-    name: 'App Name',
-    redirectUri: 'http://www.exemplo.com.br',
-    site: 'http://www.exemplo.com.br/retorno');
+    description: 'Descrição da platforma de teste para o boca a boca',
+    name: 'bocaboca Teste',
+    redirectUri: 'http://www.google.com.br',
+    site: 'http://www.google.com.br/retorno');
 
 List<Receiver> receiver = [
   Receiver(
@@ -306,17 +374,18 @@ MultiPagamentos ml = MultiPagamentos(
 );
 
 Transferencia transferencia = Transferencia(
-    amount: 5,
+    amount: 502,
     transferInstrument: TransferInstrument(
         method: 'BANK_ACCOUNT',
         bankAccount: ContaBancaria(
-            accountNumber: '12345678',
-            accountCheckNumber: '7',
+            accountNumber: '12345',
+            accountCheckNumber: '5',
             type: 'CHECKING',
             holder: Holder(
                 fullname: 'Gustavo Vinicius Staron',
-                taxDocument: TaxDocument(type: 'CPF', number: '089.293.159-09')),
-            agencyCheckNumber: '0',
+                taxDocument:
+                    TaxDocument(type: 'CPF', number: '999.999.999-99')),
+            agencyCheckNumber: '1',
             agencyNumber: '12345',
             bankNumber: '237')));
 
@@ -436,7 +505,6 @@ MultiPedidos multiPedido = MultiPedidos(ownId: 'meu_multiorder_id', orders: [
 
 Antecipacao antecipacao = Antecipacao(externalId: 'ANT-5DB57BGL9FGT');
 
-
 ContaBancaria contaBancaria = ContaBancaria(
     bankNumber: '237',
     type: 'CHECKING',
@@ -448,18 +516,14 @@ ContaBancaria contaBancaria = ContaBancaria(
         taxDocument: TaxDocument(type: 'CPF', number: '622.134.533-22'),
         fullname: 'Demo Moip'));
 
-
-
-
 void main() {
   group("Testes Wirecard", () {
     //TODO CRIAR CONTA BANCARIA
-    /* test('Criar Conta Bancaria: ', () async {
+    /*test('Criar Conta Bancaria: ', () async {
       Response result = await w.CriarContaBancaria(cb, 'MPA-E16FF9ECEE78');
 
       print('Result Conta Bancaria ${result.statusCode}');
       print('Result Conta Bancaria ${result.body.toString()}');
-
     });*/
 
     //TODO LISTAR TODAS AS CONTAS BANCARIAS
@@ -481,7 +545,7 @@ void main() {
     }); */
 
     //TODO CONSULTAR CONTA BANCARIA
-   /*test('Consultar Conta Bancaria: ', () async {
+    /*test('Consultar Conta Bancaria: ', () async {
       Response result = await w.ConsultarContaBancaria('BKA-XET4SGNPSV8T');
 
       print('Result Consultar Conta Bancaria ${result.statusCode}');
@@ -496,6 +560,14 @@ void main() {
       print('Result Deletar Conta Bancaria ${result.body.toString()}');
 
     });  */
+
+   /* test('Consultar  Conta Wire: ', () async {
+      Response result = await w.   VerificarContaWirecardExistente('MPA-A9F2157E4239');
+
+      print('Consultar   Conta Wire ${result.statusCode}');
+      print('Consultar  Conta Wire ${result.body.toString()}');
+
+    }); */
     //TODO CONSULTAR SALDO NA CONTA WIRE
     /*test('Consultar Saldo Conta Wire: ', () async {
       Response result = await w.ConsultarSaldoWireCard();
@@ -551,12 +623,12 @@ void main() {
       print('Consultar Lançamento ${result.body.toString()}');
 
     });*/
-        //TODO CRIAR TRANSFERENCIA
-   /* test('Criar Transferencia: ', () async {
+    //TODO CRIAR TRANSFERENCIA
+    /*test('Criar Transferencia: ', () async {
       Response result = await w.CriarTransferencia(transferencia);
       print('Criar Transferencia ${result.statusCode}');
       print('Criar Transferencia ${result.body.toString()}');
-    }); */
+    });*/
 
     //TODO CANCELAR PAGAMENTO PRE AUTORIZADO
     /*test('Cancelar Pagamento pre autorizado: ', () async {
@@ -566,8 +638,8 @@ void main() {
       print('Cancelar Pagamento pre autorizado ${result.body.toString()}');
 
     }); */
-           //TODO REVERTER TRANSFERENCIA
-   /* test('Reverter transferencia: ', () async {
+    //TODO REVERTER TRANSFERENCIA
+    /* test('Reverter transferencia: ', () async {
       Response result = await w.ReverterTransferencia('TRA-B0W5FD5FCADG');
 
       print('Reverter transferencia ${result.statusCode}');
@@ -575,8 +647,8 @@ void main() {
 
     }); */
 
-       //TODO LISTAR TODAS AS TRANSFERENCIAS
-   /* test('Listar Todas as Transferencia: ', () async {
+    //TODO LISTAR TODAS AS TRANSFERENCIAS
+    /* test('Listar Todas as Transferencia: ', () async {
       Response result = await w.ConsultarTodasAsTransferencia();
 
       print('Listar Todas as Transferencia ${result.statusCode}');
@@ -584,58 +656,57 @@ void main() {
 
     });*/
 
-        //TODO CONSULTAR TRANSFERENCIA
+    //TODO CONSULTAR TRANSFERENCIA
     /*test('Consultar Transferencia: ', () async {
       Response result = await w.ConsultarTransferencia('TRA-28HRLYNLMUFH');
       print('Consultar Transferencia ${result.statusCode}');
       print('Consultar Transferencia ${result.body.toString()}');
 
     });  */
-      //TODO REEMBOLSO DE PAGAMENTO
+    //TODO REEMBOLSO DE PAGAMENTO
     /*test('Reembolso Pagamento: ', () async {
       Response result = await w.Reembolsar('PAY-OK0AQYTLTLYL');
       print('Reembolso Pagamento ${result.statusCode}');
       print('Reembolso Pagamento ${result.body.toString()}');
     }); */
-      //TODO REEMBOLSAR PEDIDO
-   /* test('Reembolso Pedido: ', () async {
+    //TODO REEMBOLSAR PEDIDO
+    /* test('Reembolso Pedido: ', () async {
       Response result = await w.ReembolsarPedido('ORD-5QXM27Y9UTZT');
       print('Reembolso Pedido ${result.statusCode}');
       print('Reembolso Pedido ${result.body.toString()}');
     });*/
 
-        //TODO CONSULTAR REEMBOLSO
-   /* test('Consultar Reembolso: ', () async {
+    //TODO CONSULTAR REEMBOLSO
+    /* test('Consultar Reembolso: ', () async {
       Response result = await w.ConsultarReembolso('REF-7MSALWZMFIKQ');
       print('Consultar Reembolso ${result.statusCode}');
       print('Consultar Reembolso ${result.body.toString()}');
     });*/
-              //TODO LISTAR REEMBOLSOS PAGAMENTO
+    //TODO LISTAR REEMBOLSOS PAGAMENTO
     /*test('Listar Reembolsos Pagamento: ', () async {
       Response result = await w.ListarReembolsoPagamento('PAY-OK0AQYTLTLYL');
       print('Listar Reembolsos Pagamento ${result.statusCode}');
       print('Listar Reembolsos Pagamento ${result.body.toString()}');
     }); */
-        //TODO LISTAR REEMBOLSO PEDIDO
+    //TODO LISTAR REEMBOLSO PEDIDO
     /*test('Listar Reembolsos Pedido: ', () async {
       Response result = await w.ListarReembolsoPedido('ORD-5QXM27Y9UTZT');
       print('Listar Reembolsos Pedido ${result.statusCode}');
       print('Listar Reembolsos Pedido ${result.body.toString()}');
     });*/
-     //TODO OBTER ARQUIVO DE VENDAS
+    //TODO OBTER ARQUIVO DE VENDAS
     /*test(' OBTER ARQUIVO DE VENDAS: ', () async {
       Response result = await w.ObterArquivoDeVendas('2020-06-26');
       print(' OBTER ARQUIVO DE VENDAS ${result.statusCode}');
       print(' OBTER ARQUIVO DE VENDAS ${result.body.toString()}');
     });*/
 
-
-   /* test(' OBTER ARQUIVO DE VENDAS: ', () async {
+    /* test(' OBTER ARQUIVO DE VENDAS: ', () async {
       Response result = await w.ObterArquivoFinanceiro('2020-06-26');
       print(' OBTER ARQUIVO DE VENDAS ${result.statusCode}');
       print(' OBTER ARQUIVO DE VENDAS ${result.body.toString()}');
     });*/
-       //TODO ESTIMATIVA DE ANTECIPAÇÃO
+    //TODO ESTIMATIVA DE ANTECIPAÇÃO
     /*test('Estimativa : ', () async {
       Response result = await w.Estimativa(500);
       print(' Estimativa ${result.statusCode}');
@@ -650,15 +721,15 @@ void main() {
       print('Criar Pagamento ${result.statusCode}');
       print('Criar Pagamento ${result.body.toString()}');
     }); */
-     //TODO SOLICITACAO DE ANTECIPACAO
-   /* test('Solicitacao Antecipacao: ', () async {
+    //TODO SOLICITACAO DE ANTECIPACAO
+    /*test('Solicitacao Antecipacao: ', () async {
 
       Response result = await w.SolicitacaoAntecipcao(1);
 
       print('Solicitacao Antecipacao ${result.statusCode}');
       print('Solicitacao Antecipacao ${result.body.toString()}');
     }); */
-               //TODO TODAS AS ANTECIPAÇÕES
+    //TODO TODAS AS ANTECIPAÇÕES
     /*test('Todas as Antecipações: ', () async {
 
       Response result = await w.ConsultarTodasAsAntecipacoes();
@@ -666,7 +737,6 @@ void main() {
       print('Todas as Antecipações ${result.statusCode}');
       print('Todas as Antecipações ${result.body.toString()}');
     });*/
-
 
     /*test('Consultar Antecipações: ', () async {
 
@@ -716,6 +786,7 @@ void main() {
       print('Result Pedido ${result.body.toString()}');
       expect(result.statusCode, 200);
     }); */
+
     //TODO VERIFICAR PAGAMENTO
     /* test ('Pagamento: ', () async {
       Response result = await w.VerificarPagamento('PAY-OK0AQYTLTLYL');
@@ -785,12 +856,12 @@ void main() {
     }) ;*/
 
     //TODO VEREFICAR KEYS
-    /*test('Verificar Keys', () async {
-      Response result = await w.VerificarKeys();
+    test('Verificar Keys', () async {
+      http.Response result = await w.VerificarKeys();
       print('Result Verificar Keys ${result.statusCode}');
       print('result verificar keys ${result.body.toString}');
       expect(result.statusCode, 200);
-    }); */
+    });
     //TODO CAPTURAR DO PAGAMENTO (EXEMPLO FECHA EM 400)
     /* test('Capturar Pagamento', () async {
       Response result = await w.CapturarPagamentoPreAutorizado('PAY-U1G2WVBEP19V');
@@ -880,7 +951,7 @@ void main() {
     });*/
 
     //TODO SIMULADOR DE PAGAMENTO
-   /* test('Simulador Pagamento', () async {
+    /* test('Simulador Pagamento', () async {
       Response result = await w.SimuladorPagamentos('PAY-HL7QRKFEQNHV', '30000');
       print('Result Verificar Pagamento ${result.statusCode}');
       expect(result.statusCode, 200);
@@ -925,6 +996,14 @@ void main() {
       print('TOKEN ${result.body}');
     }); */
 
+    //TODO CRIAR CONTA PJ
+   /* test('Conta PJ', () async {
+      Response result = await w.CriarContaPJ(pj);
+      print('Result Conta PJ ${result.statusCode}');
+      print('Result Conta PJ ${result.body}');
+      print('APP TOKEN ${cc.accessToken}');
+    }); */
+
     //TODO CRIAR CONTA PF
 
     /*test('Conta PF', () async {
@@ -933,7 +1012,7 @@ void main() {
       print('Result Conta PF ${result.body}');
 
       print('APP TOKEN ${cc.accessToken}');
-    });  */
+    }); */
 
     //TODO SOLICITAR PERMISSÕES DE ACESSO AO USUÁRIO
     /*test('Verificando Permissao', () async{
@@ -950,23 +1029,23 @@ void main() {
       Response response = await w.VerificarContaPF('MPA-8307EF11B83E');
       print('Result da verificação ${response.statusCode}');
       print('body ${response.body}');
-      
-    }); */
+
+    });*/
 
     //TODO VERIFICAR SE POSSUI CONTAWIRECARD
-    /* test('Verificar contaWire', () async {
+    /*test('Verificar contaWire', () async {
       Response result = await w.VerificarContaWirecard('gustaron5@gmail.com');
       print('Result Verificar Conta ${result.statusCode}');
       expect(result.statusCode, 200);
-    });   */
+    });*/
 
     //TODO REGISTRAR APP
-    /*test('Registrar App', () async {
-      Response result = await w.RegistrarApp(app);
+    test('Registrar App', () async {
+      http.Response result = await w.RegistrarApp(app);
       print('Registrar App ${result.statusCode}');
       print('Registrar App ${result.body}');
       appRegistrado = App.fromJson(json.decode(result.body.toString()));
       print('APP TOKEN ${appRegistrado.accessToken}');
-    }); */
+    });
   });
 }
